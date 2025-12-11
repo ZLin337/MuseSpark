@@ -26,6 +26,7 @@ const App = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [savedInspirations, setSavedInspirations] = useState<SavedInspiration[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   
   // UI Interaction
   const [input, setInput] = useState('');
@@ -59,19 +60,27 @@ const App = () => {
   
   // --- Effects ---
   useEffect(() => {
-    const loadedSessions = localStorage.getItem('museSparkSessions');
-    const loadedSaved = localStorage.getItem('museSparkSaved');
-    if (loadedSessions) setSessions(JSON.parse(loadedSessions));
-    if (loadedSaved) setSavedInspirations(JSON.parse(loadedSaved));
+    try {
+      const loadedSessions = localStorage.getItem('museSparkSessions');
+      const loadedSaved = localStorage.getItem('museSparkSaved');
+      if (loadedSessions) setSessions(JSON.parse(loadedSessions));
+      if (loadedSaved) setSavedInspirations(JSON.parse(loadedSaved));
+    } catch (e) {
+      console.error("Failed to load data", e);
+    } finally {
+      setIsDataLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
+    if (!isDataLoaded) return;
     localStorage.setItem('museSparkSessions', JSON.stringify(sessions));
-  }, [sessions]);
+  }, [sessions, isDataLoaded]);
 
   useEffect(() => {
+    if (!isDataLoaded) return;
     localStorage.setItem('museSparkSaved', JSON.stringify(savedInspirations));
-  }, [savedInspirations]);
+  }, [savedInspirations, isDataLoaded]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -117,6 +126,21 @@ const App = () => {
   const updateCurrentSession = (updates: Partial<ChatSession>) => {
     if (!currentSessionId) return;
     setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, ...updates, lastUpdated: Date.now() } : s));
+  };
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (window.confirm(t.deleteChatConfirm)) {
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      
+      // If we deleted the active session, switch to home or clear active
+      if (currentSessionId === sessionId) {
+        setCurrentSessionId(null);
+        setView('home');
+      }
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,8 +239,12 @@ const App = () => {
   };
 
   const handleDeleteSaved = (id: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if(confirm("Are you sure you want to delete this inspiration?")) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (window.confirm(t.deleteInspirationConfirm)) {
       setSavedInspirations(prev => prev.filter(i => i.id !== id));
       if (view === 'note_review' && activeSavedId === id) {
         setView('my_inspirations');
@@ -256,7 +284,7 @@ const App = () => {
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-2">{t.history}</div>
         {sessions.length === 0 && <div className="text-sm text-slate-600 px-2 italic">{t.emptyHistory}</div>}
         {sessions.map(s => (
-          <button 
+          <div 
             key={s.id}
             onClick={() => {
               setCurrentSessionId(s.id);
@@ -266,11 +294,20 @@ const App = () => {
               setViewerData(null);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
-            className={`w-full text-left p-3 rounded-lg truncate text-sm transition-all flex flex-col ${currentSessionId === s.id && view === 'chat' ? 'bg-slate-800 text-white shadow-sm' : 'hover:bg-slate-800/50 text-slate-400'}`}
+            className={`w-full group relative flex items-center p-3 rounded-lg transition-all cursor-pointer ${currentSessionId === s.id && view === 'chat' ? 'bg-slate-800 text-white shadow-sm' : 'hover:bg-slate-800/50 text-slate-400'}`}
           >
-            <span className="font-medium truncate">{s.title}</span>
-            <span className="text-[10px] text-slate-500">{new Date(s.lastUpdated).toLocaleDateString()}</span>
-          </button>
+            <div className="flex-1 min-w-0 pr-8">
+              <div className="font-medium truncate">{s.title}</div>
+              <div className="text-[10px] text-slate-500">{new Date(s.lastUpdated).toLocaleDateString()}</div>
+            </div>
+            <button 
+              onClick={(e) => handleDeleteSession(s.id, e)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-red-400 rounded-full hover:bg-slate-700 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20"
+              title={t.delete}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
         ))}
       </nav>
 
@@ -561,7 +598,7 @@ const App = () => {
                 >
                    <button 
                      onClick={(e) => handleDeleteSaved(item.id, e)} 
-                     className="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                     className="absolute top-4 right-4 text-slate-400 hover:text-red-500 p-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 hover:bg-slate-100 rounded-full"
                      title={t.delete}
                    >
                      ✕

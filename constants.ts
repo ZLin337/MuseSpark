@@ -49,7 +49,9 @@ export const TEXTS: Record<Language, Record<string, string>> = {
     cancelEdit: "Cancel Edit",
     proFeature: "PRO Feature",
     subscribeModalTitle: "Unlock MuseSpark Pro",
-    subscribeBtn: "Subscribe Now - $9.99/mo"
+    subscribeBtn: "Subscribe Now - $9.99/mo",
+    deleteChatConfirm: "Are you sure you want to delete this chat?",
+    deleteInspirationConfirm: "Are you sure you want to delete this saved inspiration?"
   },
   zh: {
     appTitle: "灵感助手",
@@ -99,7 +101,9 @@ export const TEXTS: Record<Language, Record<string, string>> = {
     cancelEdit: "取消编辑",
     proFeature: "专业版功能",
     subscribeModalTitle: "解锁 MuseSpark Pro",
-    subscribeBtn: "立即订阅 - ¥28/月"
+    subscribeBtn: "立即订阅 - ¥28/月",
+    deleteChatConfirm: "确定要删除此对话吗？",
+    deleteInspirationConfirm: "确定要删除这条保存的灵感吗？"
   },
   es: {
     appTitle: "MuseSpark",
@@ -149,7 +153,9 @@ export const TEXTS: Record<Language, Record<string, string>> = {
     cancelEdit: "Cancelar Edición",
     proFeature: "Función PRO",
     subscribeModalTitle: "Desbloquear MuseSpark Pro",
-    subscribeBtn: "Suscribirse - $9.99/mes"
+    subscribeBtn: "Suscribirse - $9.99/mes",
+    deleteChatConfirm: "¿Estás seguro de que quieres eliminar este chat?",
+    deleteInspirationConfirm: "¿Estás seguro de que deseas eliminar esta inspiración guardada?"
   },
   ja: {
     appTitle: "MuseSpark",
@@ -199,7 +205,9 @@ export const TEXTS: Record<Language, Record<string, string>> = {
     cancelEdit: "編集をキャンセル",
     proFeature: "PRO機能",
     subscribeModalTitle: "MuseSpark Proのロック解除",
-    subscribeBtn: "購読する - ¥1000/月"
+    subscribeBtn: "購読する - ¥1000/月",
+    deleteChatConfirm: "このチャットを削除してもよろしいですか？",
+    deleteInspirationConfirm: "この保存されたインスピレーションを削除してもよろしいですか？"
   }
 };
 
