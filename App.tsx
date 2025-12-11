@@ -2,16 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { TEXTS, PLACEHOLDER_AVATAR } from './constants';
 import { Message, Language, AppView, InspirationNote, SavedInspiration, ChatSession, Attachment } from './types';
 import { chatWithGemini, analyzeAndGenerateNote, translateNoteContent } from './services/geminiService';
-import MindMap from './components/MindMap';
-import Memo from './components/Memo';
 import InspirationNoteView from './components/InspirationNote';
 
 // Icons
 const IconMenu = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>;
 const IconSend = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
 const IconSparkles = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>;
-const IconBrain = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></svg>;
-const IconFileText = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>;
 const IconFolder = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>;
 const IconImage = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>;
 const IconCrown = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>;
@@ -36,14 +32,6 @@ const App = () => {
   
   // Temporary state for generated note review flow
   const [pendingNote, setPendingNote] = useState<InspirationNote | null>(null);
-  
-  // Tools Visibility
-  const [showMindMap, setShowMindMap] = useState(false);
-  const [showMemo, setShowMemo] = useState(false);
-  const [toolFullScreen, setToolFullScreen] = useState(false);
-
-  // Tools Viewer (Read/Edit for Saved Inspirations)
-  const [viewerData, setViewerData] = useState<{ type: 'mindMap' | 'memo', data: any } | null>(null);
   const [activeSavedId, setActiveSavedId] = useState<string | null>(null);
 
   // Modals
@@ -107,11 +95,6 @@ const App = () => {
       id: Date.now().toString(),
       title: `${t.startChat} ${sessions.length + 1}`,
       messages: [],
-      mindMap: { 
-        nodes: [{ id: 'root', x: 250, y: 250, label: 'Central Idea', type: 'root' }],
-        edges: []
-      },
-      memo: "",
       lastUpdated: Date.now()
     };
     setSessions(prev => [newSession, ...prev]);
@@ -119,7 +102,6 @@ const App = () => {
     setActiveSavedId(null);
     setView('chat');
     setPendingNote(null);
-    setViewerData(null);
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
@@ -216,9 +198,7 @@ const App = () => {
       sessionId: currentSessionId,
       title: pendingNote.project.summary,
       date: new Date().toLocaleDateString(),
-      note: pendingNote,
-      mindMapSnapshot: activeSession.mindMap,
-      memoSnapshot: activeSession.memo
+      note: pendingNote
     };
     
     setSavedInspirations(prev => [newEntry, ...prev]);
@@ -291,7 +271,6 @@ const App = () => {
               setView('chat');
               setActiveSavedId(null);
               setPendingNote(null);
-              setViewerData(null);
               if (window.innerWidth < 768) setSidebarOpen(false);
             }}
             className={`w-full group relative flex items-center p-3 rounded-lg transition-all cursor-pointer ${currentSessionId === s.id && view === 'chat' ? 'bg-slate-800 text-white shadow-sm' : 'hover:bg-slate-800/50 text-slate-400'}`}
@@ -354,30 +333,8 @@ const App = () => {
           </h2>
       </div>
       <div className="flex items-center gap-2">
-        {/* Only show Tools toggle in Chat Mode */}
-        {view === 'chat' && (
-          <>
-            <button 
-              onClick={() => { setShowMindMap(!showMindMap); setShowMemo(false); setToolFullScreen(false); }}
-              className={`p-2 rounded-lg transition-colors relative ${showMindMap ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-slate-100 text-slate-500'}`}
-              title={t.mindMap}
-            >
-              <IconBrain />
-            </button>
-            <button 
-              onClick={() => { setShowMemo(!showMemo); setShowMindMap(false); setToolFullScreen(false); }}
-              className={`p-2 rounded-lg transition-colors ${showMemo ? 'bg-yellow-100 text-yellow-600' : 'hover:bg-slate-100 text-slate-500'}`}
-              title={t.memo}
-            >
-              <IconFileText />
-            </button>
-          </>
-        )}
-
-        <div className="h-6 w-px bg-slate-200 mx-2"></div>
-
         <button 
-           onClick={() => { setView('my_inspirations'); setViewerData(null); setActiveSavedId(null); }}
+           onClick={() => { setView('my_inspirations'); setActiveSavedId(null); }}
            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'my_inspirations' ? 'bg-slate-100 text-slate-800' : 'text-slate-600 hover:bg-slate-50'}`}
         >
            <IconFolder /> <span className="hidden sm:inline">{t.myInspirations}</span>
@@ -385,100 +342,6 @@ const App = () => {
       </div>
     </header>
   );
-
-  const renderToolsPanel = () => {
-    if ((!showMindMap && !showMemo) || !activeSession || view !== 'chat') return null;
-    
-    const isMobile = window.innerWidth < 1024;
-    const panelClasses = toolFullScreen 
-      ? 'fixed inset-0 z-50 bg-white p-4'
-      : `w-full lg:w-96 border-l border-slate-200 bg-white flex flex-col shadow-xl z-20 ${isMobile ? 'fixed inset-y-0 right-0 max-w-[90vw]' : ''}`;
-
-    return (
-      <div className={panelClasses}>
-        <div className="flex justify-between items-center mb-2 px-2 pt-2 lg:hidden">
-          <span className="font-bold text-slate-500">{showMindMap ? t.mindMap : t.memo}</span>
-          <button onClick={() => {setShowMindMap(false); setShowMemo(false)}} className="p-2 text-slate-400">✕</button>
-        </div>
-        
-        <div className="flex-1 overflow-hidden p-2 lg:p-4 bg-slate-50 h-full">
-          {showMindMap && (
-            <MindMap 
-              lang={lang} 
-              texts={t} 
-              data={activeSession.mindMap}
-              onUpdate={(newData) => updateCurrentSession({ mindMap: newData })}
-              isFullScreen={toolFullScreen}
-              onToggleFullScreen={() => setToolFullScreen(!toolFullScreen)}
-            />
-          )}
-          {showMemo && (
-             <Memo 
-               content={activeSession.memo}
-               onChange={(val) => updateCurrentSession({ memo: val })}
-               texts={t}
-               isFullScreen={toolFullScreen}
-               onToggleFullScreen={() => setToolFullScreen(!toolFullScreen)}
-             />
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderViewerModal = () => {
-    if (!viewerData) return null;
-    
-    // Support Editing Saved Data
-    const handleSaveSnapshot = (newData: any) => {
-       if (!activeSavedId) return;
-       const update = viewerData.type === 'mindMap' ? { mindMapSnapshot: newData } : { memoSnapshot: newData };
-       setSavedInspirations(prev => prev.map(s => s.id === activeSavedId ? { ...s, ...update } : s));
-    };
-
-    return (
-      <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div className="bg-white rounded-xl w-full max-w-5xl h-[85vh] flex flex-col relative shadow-2xl overflow-hidden animate-fade-in">
-           <div className="flex justify-between items-center p-4 border-b border-slate-100">
-             <h3 className="font-bold text-slate-700 flex items-center gap-2">
-               {viewerData.type === 'mindMap' ? <IconBrain /> : <IconFileText />}
-               {viewerData.type === 'mindMap' ? t.viewMindMap : t.viewMemo}
-             </h3>
-             <button onClick={() => setViewerData(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500">✕</button>
-           </div>
-           <div className="flex-1 p-4 bg-slate-50 overflow-hidden">
-             {viewerData.type === 'mindMap' ? (
-                <MindMap 
-                  lang={lang} texts={t} 
-                  data={viewerData.data} 
-                  onUpdate={(d) => {
-                    // Update local view state to reflect drag immediately
-                    setViewerData({ ...viewerData, data: d });
-                    // Persist to saved
-                    handleSaveSnapshot(d);
-                  }} 
-                  isFullScreen={false} 
-                  onToggleFullScreen={() => {}} 
-                  readOnly={!activeSavedId} // Read only if not a saved item (shouldn't happen in this flow)
-                />
-             ) : (
-                <Memo 
-                   content={viewerData.data} 
-                   onChange={(v) => {
-                     setViewerData({ ...viewerData, data: v });
-                     handleSaveSnapshot(v);
-                   }} 
-                   texts={t} 
-                   isFullScreen={false} 
-                   onToggleFullScreen={() => {}} 
-                   readOnly={!activeSavedId} 
-                />
-             )}
-           </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderChat = () => (
     <div className="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
@@ -611,21 +474,6 @@ const App = () => {
                         <span key={tag} className="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-600">{tag}</span>
                       ))}
                    </div>
-                   {/* Quick Actions */}
-                   <div className="mt-4 pt-4 border-t border-slate-50 flex gap-2">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveSavedId(item.id); setViewerData({ type: 'mindMap', data: item.mindMapSnapshot }) }}
-                        className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
-                      >
-                        <IconBrain /> {t.mindMap}
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveSavedId(item.id); setViewerData({ type: 'memo', data: item.memoSnapshot }) }}
-                        className="flex-1 py-2 bg-yellow-50 text-yellow-600 rounded text-xs font-bold hover:bg-yellow-100 transition-colors flex items-center justify-center gap-1"
-                      >
-                        <IconFileText /> {t.memo}
-                      </button>
-                   </div>
                 </div>
               ))}
            </div>
@@ -650,7 +498,7 @@ const App = () => {
                 </div>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-slate-800 mb-4 tracking-tight">{t.welcome}</h1>
                 <p className="text-lg text-slate-500 mb-8 max-w-lg leading-relaxed">
-                  Collaborate with AI to refine your ideas, visualize structure, and generate professional execution plans.
+                  Collaborate with AI to refine your ideas and generate professional execution plans.
                 </p>
                 <button 
                   onClick={createNewSession}
@@ -664,7 +512,6 @@ const App = () => {
             {view === 'chat' && (
               <>
                 {renderChat()}
-                {renderToolsPanel()}
               </>
             )}
 
@@ -679,20 +526,6 @@ const App = () => {
                    onBackToList={() => { setView('my_inspirations'); setActiveSavedId(null); setPendingNote(null); }}
                    onDelete={() => activeSavedId && handleDeleteSaved(activeSavedId)}
                    onUpdate={handleUpdateSavedNote}
-                   onViewMindMap={
-                     () => {
-                        const saved = savedInspirations.find(i => i.id === activeSavedId);
-                        if(saved) setViewerData({ type: 'mindMap', data: saved.mindMapSnapshot });
-                        else if(activeSession) { setShowMindMap(true); setView('chat'); }
-                     }
-                   }
-                   onViewMemo={
-                      () => {
-                        const saved = savedInspirations.find(i => i.id === activeSavedId);
-                        if(saved) setViewerData({ type: 'memo', data: saved.memoSnapshot });
-                        else if(activeSession) { setShowMemo(true); setView('chat'); }
-                     }
-                   }
                  />
                </div>
             )}
@@ -703,7 +536,6 @@ const App = () => {
 
       {/* Overlays */}
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
-      {renderViewerModal()}
 
       {/* Auth Modal */}
       {showAuthModal && (

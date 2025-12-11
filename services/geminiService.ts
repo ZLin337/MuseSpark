@@ -37,28 +37,9 @@ const noteSchema: Schema = {
         disclaimer: { type: Type.STRING }
       },
       required: ["risks", "disclaimer"]
-    },
-    visualStructure: {
-      type: Type.OBJECT,
-      description: "A simple hierarchical structure for a mind map visualization",
-      properties: {
-        centralNode: { type: Type.STRING, description: "The central idea" },
-        branches: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              main: { type: Type.STRING, description: "Main branch label" },
-              subs: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Sub branch labels" }
-            },
-            required: ["main", "subs"]
-          }
-        }
-      },
-      required: ["centralNode", "branches"]
     }
   },
-  required: ["project", "business", "legal", "visualStructure"]
+  required: ["project", "business", "legal"]
 };
 
 export const chatWithGemini = async (
@@ -126,7 +107,6 @@ export const analyzeAndGenerateNote = async (
     const prompt = `
       Create a structured Inspiration Note based on the conversation.
       Language: ${lang}.
-      Ensure the visualStructure contains 3-4 main branches with detailed sub-branches.
       
       Conversation:
       ${conversationContext}
@@ -190,20 +170,26 @@ export const translateNoteContent = async (
 };
 
 export const getMindMapSuggestion = async (
-  currentNodes: string,
-  userQuery: string,
+  nodesSummary: string,
+  query: string,
   lang: string
-) => {
+): Promise<string | null> => {
   try {
+    const prompt = `
+      Context: Mind map nodes: ${nodesSummary}.
+      User Idea: ${query}.
+      Language: ${lang}.
+      Task: Provide a short, single phrase suggestion (max 5 words) to add as a new node related to the idea.
+    `;
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `User Query: ${userQuery}. Current Mind Map Nodes: ${currentNodes}`,
-      config: {
-        systemInstruction: `You are a helper for a mind-mapping tool. Give a very short (1 sentence) suggestion or encouragement based on the user's map structure. Language: ${lang}.`
-      }
+      contents: prompt,
     });
+
     return response.text;
-  } catch (e) {
-    return "Keep expanding!";
+  } catch (error) {
+    console.error("MindMap suggestion failed", error);
+    return null;
   }
 };

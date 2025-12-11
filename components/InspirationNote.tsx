@@ -6,8 +6,6 @@ interface NoteProps {
   texts: Record<string, string>;
   onSatisfied?: () => void;
   onDissatisfied?: () => void;
-  onViewMindMap?: () => void;
-  onViewMemo?: () => void;
   isSavedMode?: boolean;
   onBackToList?: () => void;
   onDelete?: () => void;
@@ -19,8 +17,6 @@ const InspirationNoteView: React.FC<NoteProps> = ({
   texts, 
   onSatisfied, 
   onDissatisfied,
-  onViewMindMap,
-  onViewMemo,
   isSavedMode = false,
   onBackToList,
   onDelete,
@@ -90,21 +86,6 @@ const InspirationNoteView: React.FC<NoteProps> = ({
             ) : (
                <h2 className="text-3xl font-bold text-slate-800 tracking-tight leading-tight">{displayNote.project.summary}</h2>
             )}
-
-            {isSavedMode && (
-              <div className="flex gap-2 shrink-0 ml-4">
-                 {onViewMindMap && (
-                   <button onClick={onViewMindMap} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors" title={texts.viewMindMap}>
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></svg>
-                   </button>
-                 )}
-                 {onViewMemo && (
-                   <button onClick={onViewMemo} className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors" title={texts.viewMemo}>
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                   </button>
-                 )}
-              </div>
-            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -146,41 +127,6 @@ const InspirationNoteView: React.FC<NoteProps> = ({
           </div>
         </section>
 
-        {/* Auto Generated Mind Map Visualization */}
-        {displayNote.visualStructure && (
-          <section className="border-t border-slate-200 pt-8">
-             <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
-               <span className="text-indigo-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M3 12h3"/><path d="M18 12h3"/><path d="M12 3v3"/><path d="M12 18v3"/></svg></span>
-               {texts.generatedMap}
-             </h3>
-             <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 overflow-x-auto">
-                <div className="flex flex-col items-center gap-6 min-w-[500px]">
-                   <div className="bg-indigo-600 text-white px-6 py-3 rounded-full font-bold shadow-md">
-                      {displayNote.visualStructure.centralNode}
-                   </div>
-                   <div className="w-px h-6 bg-slate-300"></div>
-                   <div className="flex gap-4 items-start w-full justify-center">
-                      {displayNote.visualStructure.branches.map((branch, i) => (
-                        <div key={i} className="flex flex-col items-center flex-1">
-                           <div className="w-full border-t border-slate-300 relative top-0 mb-4"></div>
-                           <div className="bg-white border border-indigo-200 text-indigo-800 px-4 py-2 rounded-lg font-semibold shadow-sm mb-3 whitespace-nowrap">
-                             {branch.main}
-                           </div>
-                           <div className="flex flex-col gap-2 items-center">
-                             {branch.subs.map((sub, j) => (
-                               <div key={j} className="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600">
-                                 {sub}
-                               </div>
-                             ))}
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </section>
-        )}
-
         {/* Business Section */}
         <section className="border-t border-slate-200 pt-8">
           <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
@@ -192,64 +138,68 @@ const InspirationNoteView: React.FC<NoteProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h4 className="font-semibold text-green-700 mb-2">Value Points</h4>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600 text-sm">
-                {displayNote.business.valueProps.map((v, i) => <li key={i}>{v}</li>)}
+              <h4 className="font-semibold text-slate-700 mb-2">MVP Features</h4>
+              <ul className="list-disc list-inside space-y-2 text-slate-600">
+                 {displayNote.business.mvpFeatures.map((f, i) => <li key={i}>{f}</li>)}
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-red-600 mb-2">Difficulties</h4>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600 text-sm">
-                {displayNote.business.difficulties.map((v, i) => <li key={i}>{v}</li>)}
-              </ul>
+              <h4 className="font-semibold text-slate-700 mb-2">Strategy</h4>
+              <p className="text-slate-600">{displayNote.business.strategy}</p>
             </div>
           </div>
-
-          <div className="mt-8 bg-indigo-900 text-white p-6 rounded-xl shadow-lg">
-            <h4 className="font-bold text-lg mb-4 text-indigo-100">{texts.mvp}</h4>
-            <ol className="list-decimal pl-5 space-y-2">
-              {displayNote.business.mvpFeatures.map((f, i) => (
-                <li key={i} className="text-indigo-50">{f}</li>
-              ))}
-            </ol>
-            <div className="mt-6 pt-4 border-t border-indigo-700/50">
-              <h5 className="text-xs uppercase text-indigo-300 font-bold tracking-wider mb-1">Strategy</h5>
-              <p className="text-sm text-indigo-100">{displayNote.business.strategy}</p>
+          
+          <div className="mt-6">
+            <h4 className="font-semibold text-slate-700 mb-2">Value Propositions</h4>
+            <div className="flex flex-wrap gap-2">
+               {displayNote.business.valueProps.map((v, i) => (
+                 <span key={i} className="bg-purple-50 text-purple-700 px-3 py-1 rounded text-sm">{v}</span>
+               ))}
             </div>
           </div>
         </section>
 
         {/* Legal Section */}
-        <section className="border-t border-slate-200 pt-8 pb-4">
-           <h3 className="text-lg font-bold text-slate-700 mb-4">{texts.risks}</h3>
-           <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
-              <ul className="list-disc pl-5 text-sm text-orange-800 mb-4">
-                {displayNote.legal.risks.map((r, i) => <li key={i}>{r}</li>)}
-              </ul>
-              <p className="text-xs text-orange-600 italic">
-                {displayNote.legal.disclaimer}
-              </p>
-           </div>
+        <section className="border-t border-slate-200 pt-8">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+             <span className="bg-orange-100 p-1 rounded text-orange-600">
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+             </span>
+             {texts.risks}
+          </h3>
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-6">
+            <ul className="space-y-2 mb-4">
+              {displayNote.legal.risks.map((r, i) => (
+                <li key={i} className="flex items-start gap-2 text-slate-700">
+                  <span className="text-orange-500 mt-1">•</span>
+                  {r}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-slate-400 italic border-t border-orange-200 pt-4 mt-4">
+               {texts.legalWarning}
+            </p>
+          </div>
         </section>
-      </div>
 
-      {/* Footer Actions (Only show in review mode, not saved mode) */}
-      {!isSavedMode && onSatisfied && onDissatisfied && (
-        <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 absolute bottom-0 left-0 right-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-          <button 
-            onClick={onDissatisfied}
-            className="px-6 py-3 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors font-medium"
-          >
-            {texts.notSatisfied}
-          </button>
-          <button 
-            onClick={onSatisfied}
-            className="px-8 py-3 rounded-lg bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all font-bold transform hover:scale-[1.02]"
-          >
-            {texts.satisfied}
-          </button>
-        </div>
-      )}
+        {/* Bottom Actions */}
+        {!isSavedMode && (
+          <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-slate-200">
+             <button 
+               onClick={onDissatisfied}
+               className="flex-1 py-3 px-6 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 transition-colors"
+             >
+               {texts.notSatisfied}
+             </button>
+             <button 
+               onClick={onSatisfied}
+               className="flex-1 py-3 px-6 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-colors"
+             >
+               {texts.satisfied}
+             </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

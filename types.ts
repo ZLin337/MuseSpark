@@ -20,31 +20,10 @@ export interface Message {
   timestamp: number;
 }
 
-export interface MindMapNode {
-  id: string;
-  x: number;
-  y: number;
-  label: string;
-  type: 'root' | 'child' | 'idea';
-}
-
-export interface MindMapEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-export interface MindMapData {
-  nodes: MindMapNode[];
-  edges: MindMapEdge[];
-}
-
 export interface ChatSession {
   id: string;
   title: string;
   messages: Message[];
-  mindMap: MindMapData;
-  memo: string;
   lastUpdated: number;
 }
 
@@ -68,10 +47,6 @@ export interface InspirationNote {
     risks: string[];
     disclaimer: string;
   };
-  visualStructure?: {
-    centralNode: string;
-    branches: { main: string; subs: string[] }[];
-  };
 }
 
 export interface SavedInspiration {
@@ -80,8 +55,25 @@ export interface SavedInspiration {
   title: string;
   date: string;
   note: InspirationNote;
-  mindMapSnapshot: MindMapData;
-  memoSnapshot: string;
 }
 
 export type AppView = 'home' | 'chat' | 'note_review' | 'my_inspirations';
+
+export interface MindMapNode {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+  type?: 'root' | 'child';
+}
+
+export interface MindMapEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+export interface MindMapData {
+  nodes: MindMapNode[];
+  edges: MindMapEdge[];
+}
