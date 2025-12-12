@@ -652,7 +652,6 @@ const App = () => {
                  <InspirationNoteView 
                    note={pendingNote} 
                    texts={t} 
-                   lang={lang} 
                    onSatisfied={handleSaveNote}
                    onDissatisfied={() => setView('chat')}
                    isSavedMode={!!activeSavedId} 

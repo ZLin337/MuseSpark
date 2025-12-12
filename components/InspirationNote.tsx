@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { InspirationNote, MindMapData, MindMapNode, MindMapEdge } from '../types';
-import MindMap from './MindMap';
+import React, { useState, useEffect } from 'react';
+import { InspirationNote } from '../types';
 
 interface NoteProps {
   note: InspirationNote;
@@ -11,66 +10,7 @@ interface NoteProps {
   onBackToList?: () => void;
   onDelete?: () => void;
   onUpdate?: (updatedNote: InspirationNote) => void;
-  lang?: string; // Add lang prop for MindMap AI
 }
-
-// Helper to transform Note to MindMap Data
-const transformNoteToMap = (note: InspirationNote): MindMapData => {
-  const nodes: MindMapNode[] = [];
-  const edges: MindMapEdge[] = [];
-  
-  // Center: Project Summary
-  const centerId = 'root';
-  nodes.push({ id: centerId, x: 400, y: 300, label: note.project.summary.slice(0, 20) + '...', type: 'root' });
-
-  // Level 1 Categories
-  const categories = [
-    { id: 'cat-proj', label: 'Project', x: 400, y: 150 },
-    { id: 'cat-biz', label: 'Business', x: 600, y: 300 },
-    { id: 'cat-legal', label: 'Legal', x: 200, y: 300 },
-  ];
-
-  categories.forEach(cat => {
-    nodes.push({ id: cat.id, x: cat.x, y: cat.y, label: cat.label, type: 'child' });
-    edges.push({ id: `e-${centerId}-${cat.id}`, source: centerId, target: cat.id });
-  });
-
-  // Level 2 Details (Distributed relative to categories)
-  
-  // Project Children
-  const projChildren = [
-    { id: 'p-target', label: note.project.targetAudience.slice(0, 15) + '...' },
-    { id: 'p-tags', label: note.project.tags[0] || 'Tag' },
-  ];
-  projChildren.forEach((child, i) => {
-    const id = child.id;
-    nodes.push({ id, x: 400 + (i === 0 ? -80 : 80), y: 80, label: child.label, type: 'child' });
-    edges.push({ id: `e-cat-proj-${id}`, source: 'cat-proj', target: id });
-  });
-
-  // Business Children
-  const bizChildren = [
-    { id: 'b-mvp', label: 'MVP: ' + (note.business.mvpFeatures[0]?.slice(0, 10) || 'Feature') + '...' },
-    { id: 'b-val', label: 'Value: ' + (note.business.valueProps[0]?.slice(0, 10) || 'Prop') + '...' },
-  ];
-  bizChildren.forEach((child, i) => {
-    const id = child.id;
-    nodes.push({ id, x: 750, y: 300 + (i === 0 ? -60 : 60), label: child.label, type: 'child' });
-    edges.push({ id: `e-cat-biz-${id}`, source: 'cat-biz', target: id });
-  });
-
-  // Legal Children
-  const legalChildren = [
-    { id: 'l-risk', label: 'Risk: ' + (note.legal.risks[0]?.slice(0, 10) || 'None') + '...' },
-  ];
-  legalChildren.forEach((child, i) => {
-    const id = child.id;
-    nodes.push({ id, x: 50, y: 300, label: child.label, type: 'child' });
-    edges.push({ id: `e-cat-legal-${id}`, source: 'cat-legal', target: id });
-  });
-
-  return { nodes, edges };
-};
 
 const InspirationNoteView: React.FC<NoteProps> = ({ 
   note, 
@@ -80,20 +20,15 @@ const InspirationNoteView: React.FC<NoteProps> = ({
   isSavedMode = false,
   onBackToList,
   onDelete,
-  onUpdate,
-  lang = 'en'
+  onUpdate
 }) => {
-  const [activeTab, setActiveTab] = useState<'doc' | 'map'>('doc');
   const [isEditing, setIsEditing] = useState(false);
   const [editedNote, setEditedNote] = useState<InspirationNote>(note);
-  const [mapData, setMapData] = useState<MindMapData>(() => transformNoteToMap(note));
-  const [isFullScreenMap, setIsFullScreenMap] = useState(false);
 
-  // Reset map when note changes deeply (e.g. translation)
+  // Reset edited note when note changes
   useEffect(() => {
     setEditedNote(note);
-    setMapData(transformNoteToMap(note));
-  }, [note.id, note.project.summary]); // Basic check
+  }, [note.id, note.project.summary]);
 
   const handleTextChange = (section: keyof InspirationNote['project'], value: string) => {
     setEditedNote(prev => ({
@@ -116,58 +51,37 @@ const InspirationNoteView: React.FC<NoteProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden animate-fade-in relative">
-      {/* Header / Tabs */}
+      {/* Header */}
       <div className="shrink-0 border-b border-slate-200 bg-white z-10">
         {isSavedMode && (
-          <div className="flex justify-between items-center p-4 pb-2">
+          <div className="flex justify-between items-center p-4">
             <button onClick={onBackToList} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm">
                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
                {texts.backToList}
             </button>
             <div className="flex gap-2">
-              {activeTab === 'doc' && (
-                isEditing ? (
+                {isEditing ? (
                   <>
-                     <button onClick={cancelEdits} className="px-3 py-1 text-slate-500 hover:text-slate-700 font-medium text-sm">{texts.cancelEdit}</button>
-                     <button onClick={saveEdits} className="px-3 py-1 bg-indigo-600 text-white rounded shadow-sm hover:bg-indigo-700 font-medium text-sm">{texts.save}</button>
+                      <button onClick={cancelEdits} className="px-3 py-1 text-slate-500 hover:text-slate-700 font-medium text-sm">{texts.cancelEdit}</button>
+                      <button onClick={saveEdits} className="px-3 py-1 bg-indigo-600 text-white rounded shadow-sm hover:bg-indigo-700 font-medium text-sm">{texts.save}</button>
                   </>
                 ) : (
                   <>
                     <button onClick={() => setIsEditing(true)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded" title={texts.edit}>
-                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button onClick={onDelete} className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded" title={texts.delete}>
-                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                   </>
-                )
-              )}
+                )}
             </div>
           </div>
         )}
-        
-        {/* Tabs */}
-        <div className="flex px-6 gap-6 pt-2">
-          <button 
-            onClick={() => setActiveTab('doc')}
-            className={`pb-3 font-semibold text-sm transition-colors relative ${activeTab === 'doc' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            {texts.viewNote}
-            {activeTab === 'doc' && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></span>}
-          </button>
-          <button 
-            onClick={() => setActiveTab('map')}
-            className={`pb-3 font-semibold text-sm transition-colors relative ${activeTab === 'map' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            {texts.mindMap}
-            {activeTab === 'map' && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></span>}
-          </button>
-        </div>
       </div>
 
       <div className="flex-1 overflow-hidden relative bg-slate-50/30">
-        {/* Document View */}
-        {activeTab === 'doc' && (
+        {/* Document View - Always Visible */}
           <div className="h-full overflow-y-auto p-6 md:p-8 space-y-8 pb-24 animate-fade-in">
             {/* Project Section */}
             <section className="space-y-4 max-w-4xl mx-auto">
@@ -300,22 +214,6 @@ const InspirationNoteView: React.FC<NoteProps> = ({
             )}
             <div className="h-12"></div>
           </div>
-        )}
-
-        {/* Mind Map View */}
-        {activeTab === 'map' && (
-          <div className="h-full p-4 animate-fade-in bg-slate-50">
-             <MindMap 
-                lang={lang}
-                texts={texts}
-                data={mapData}
-                onUpdate={setMapData}
-                isFullScreen={isFullScreenMap}
-                onToggleFullScreen={() => setIsFullScreenMap(!isFullScreenMap)}
-                readOnly={isSavedMode && !isEditing} // Allow edits in map only if we add map saving logic later, for now allow playing around
-             />
-          </div>
-        )}
       </div>
     </div>
   );
