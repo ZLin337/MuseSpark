@@ -1,9 +1,35 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { GoogleGenAI, Type, Schema, GenerateContentResponse } from "@google/genai";
 import { InspirationNote, Message, Attachment } from "../types";
 
 // NOTE: In a real app, API_KEY should be handled securely. 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
+
+// Helper function for exponential backoff retries
+const retryWithBackoff = async <T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error: any) {
+    // Check for overload (503) or rate limit (429) errors
+    // The error object structure can vary, so we check multiple properties
+    const status = error.status || error.code || (error.response ? error.response.status : undefined);
+    const message = (error.message || '').toLowerCase();
+    
+    const isRetryable = 
+      status === 503 || 
+      status === 429 || 
+      message.includes('overloaded') || 
+      message.includes('quota') ||
+      message.includes('503');
+
+    if (retries > 0 && isRetryable) {
+      console.warn(`API Busy/Overloaded. Retrying in ${delay}ms... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+};
 
 // Schema for the Inspiration Note
 const noteSchema: Schema = {
@@ -83,18 +109,21 @@ export const chatWithGemini = async (
       });
     }
 
-    const response = await ai.models.generateContent({
+    const response = await retryWithBackoff<GenerateContentResponse>(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
         ...formattedHistory.map(h => ({ role: h.role, parts: h.parts })),
         { role: 'user', parts: currentParts }
       ],
       config: { systemInstruction }
-    });
+    }));
 
     return response.text;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat Error:", error);
+    if (error.status === 503 || (error.message && error.message.includes('overloaded'))) {
+       return "The AI service is currently very busy. Please try sending your message again in a moment.";
+    }
     return "I'm having trouble connecting. Please try again.";
   }
 };
@@ -112,14 +141,14 @@ export const analyzeAndGenerateNote = async (
       ${conversationContext}
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await retryWithBackoff<GenerateContentResponse>(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: noteSchema
       }
-    });
+    }));
 
     if (response.text) {
       const data = JSON.parse(response.text);
@@ -149,14 +178,14 @@ export const translateNoteContent = async (
       ${JSON.stringify(note)}
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await retryWithBackoff<GenerateContentResponse>(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         responseSchema: noteSchema
       }
-    });
+    }));
 
     if (response.text) {
       const data = JSON.parse(response.text);
@@ -182,12 +211,12 @@ export const getMindMapSuggestion = async (
       Task: Provide a short, single phrase suggestion (max 5 words) to add as a new node related to the idea.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await retryWithBackoff<GenerateContentResponse>(() => ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
-    });
+    }));
 
-    return response.text;
+    return response.text ?? null;
   } catch (error) {
     console.error("MindMap suggestion failed", error);
     return null;
