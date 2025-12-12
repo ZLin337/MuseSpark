@@ -287,7 +287,7 @@ const App = () => {
   // --- Render Sections ---
 
   const renderSidebar = () => (
-    <aside className={`fixed inset-y-0 left-0 z-50 w-72 glass-panel-dark text-slate-300 transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:flex flex-col shrink-0`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 w-[85vw] max-w-72 glass-panel-dark text-slate-300 transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:flex flex-col shrink-0 md:w-72`}>
       <div className="p-6 flex items-center gap-3 font-display font-bold text-white text-2xl cursor-pointer" onClick={() => { setView('home'); setCurrentSessionId(null); if (window.innerWidth < 768) setSidebarOpen(false); }}>
         <div className="w-10 h-10 bg-gradient-to-tr from-muse-500 to-spark-500 rounded-xl flex items-center justify-center shadow-lg shadow-muse-500/30">
           <IconSparkles />
@@ -476,7 +476,7 @@ const App = () => {
                   </div>
                )}
 
-               <div className={`max-w-[80%] md:max-w-[70%] p-4 md:p-6 rounded-3xl shadow-sm leading-relaxed whitespace-pre-wrap ${
+               <div className={`max-w-[88%] md:max-w-[70%] p-4 md:p-6 rounded-3xl shadow-sm leading-relaxed whitespace-pre-wrap ${
                  msg.role === 'user' 
                  ? 'bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-tr-sm shadow-xl shadow-slate-900/10' 
                  : 'glass-panel text-slate-800 rounded-tl-sm shadow-sm border-white/60'
@@ -506,7 +506,7 @@ const App = () => {
        </div>
 
        {/* Input Area */}
-       <div className="p-4 md:p-6 shrink-0 z-20">
+       <div className="p-3 md:p-6 shrink-0 z-20">
           <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-2 shadow-2xl shadow-muse-900/5 ring-1 ring-white/50 relative">
              
              {/* Floating Generate Button */}

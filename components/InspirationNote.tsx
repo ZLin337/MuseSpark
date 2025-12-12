@@ -82,7 +82,7 @@ const InspirationNoteView: React.FC<NoteProps> = ({
 
       <div className="flex-1 overflow-hidden relative bg-slate-50/30">
         {/* Document View - Always Visible */}
-          <div className="h-full overflow-y-auto p-6 md:p-8 space-y-8 pb-24 animate-fade-in">
+          <div className="h-full overflow-y-auto p-4 md:p-8 space-y-8 pb-24 animate-fade-in">
             {/* Project Section */}
             <section className="space-y-4 max-w-4xl mx-auto">
               <div className="flex justify-between items-start">
